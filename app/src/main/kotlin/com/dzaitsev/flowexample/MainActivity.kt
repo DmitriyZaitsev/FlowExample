@@ -20,7 +20,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
   private val TAG = "MainActivity"
   private val mRootView: ViewGroup by lazy { findViewById(R.id.rootView) as ViewGroup }
   private val mDrawer: DrawerLayout by lazy { findViewById(R.id.drawer_layout) as DrawerLayout }
-  private val mFlow: Flow by lazy { Flow(History.single(MainScreen())) }
+  private val mFlow: Flow by lazy { Flow(History.single(SimpleScreen("Main"))) }
   private var mToggle: ActionBarDrawerToggle by Delegates.notNull<ActionBarDrawerToggle>()
 
   /**
@@ -75,11 +75,11 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     mDrawer.closeDrawer(GravityCompat.START)
 
     mFlow.set(when (item.itemId) {
-      R.id.nav_import -> ImportScreen()
-      R.id.nav_gallery -> GalleryScreen()
-      R.id.nav_slideshow -> SlideshowScreen()
-      R.id.nav_tools -> ToolsScreen()
-      else -> MainScreen()
+      R.id.nav_import -> SimpleScreen("Import")
+      R.id.nav_gallery -> SimpleScreen("Gallery")
+      R.id.nav_slideshow -> SimpleScreen("Slideshow")
+      R.id.nav_tools -> SimpleScreen("Tools")
+      else -> SimpleScreen("Main")
     })
 
     return true
@@ -104,7 +104,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     mToggle.toolbarNavigationClickListener = when {
       isHome -> null
       else -> View.OnClickListener {
-        mFlow.setHistory(History.single(MainScreen()), Flow.Direction.BACKWARD)
+        mFlow.setHistory(History.single(SimpleScreen("Main")), Flow.Direction.BACKWARD)
       }
     }
     mToggle.syncState()
