@@ -21,7 +21,12 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
   private val TAG = "MainActivity"
   private val mSceneRoot: ViewAnimator by lazy { findViewById(R.id.rootView) as ViewAnimator }
   private val mDrawer: DrawerLayout by lazy { findViewById(R.id.drawer_layout) as DrawerLayout }
-  private val mFlow: Flow by lazy { Flow(History.single(Screen("Main"))) }
+  private val mFlow: Flow by lazy {
+    when (lastCustomNonConfigurationInstance) {
+      null -> Flow(History.single(Screen("Main")))
+      else -> lastCustomNonConfigurationInstance as Flow
+    }
+  }
   private var mToggle: ActionBarDrawerToggle by Delegates.notNull<ActionBarDrawerToggle>()
 
   /**
@@ -98,6 +103,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     return true
   }
+
+  override fun onRetainCustomNonConfigurationInstance() = mFlow
 
   private fun updateAppBar(title: String, isHome: Boolean) {
     supportActionBar.title = title
