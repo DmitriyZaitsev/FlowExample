@@ -33,9 +33,19 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
   override fun dispatch(traversal: Flow.Traversal, callback: Flow.TraversalCallback) {
     val destination = traversal.destination
     Log.i(TAG, "Flow.dispatch ${traversal.direction}")
-    val newScreen = destination.top<Screen>()
-    displayViewFor(newScreen)
-    updateAppBar(newScreen, destination)
+
+    val destScreen = destination.top<Screen>()
+    val destView = LayoutInflater.from(this).inflate(destScreen.viewResId, mRootView, false)
+    destination.currentViewState()?.restore(destView)
+    destScreen.onViewCreated(destView)
+
+    val originView = mRootView.getChildAt(0)
+    mRootView.addView(destView, 0)
+    if (originView != null) {
+      traversal.origin.currentViewState()?.save(originView)
+      mRootView.removeView(originView)
+    }
+    updateAppBar(destScreen.title, destination.size() == 1)
     callback.onTraversalCompleted()
   }
 
@@ -85,26 +95,13 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     return true
   }
 
-  private fun displayViewFor(screen: Screen) {
-    val layout = screen.javaClass.getAnnotation(Layout::class.java)
-    val oldView: View? = mRootView.getChildAt(0)
-    val newView = LayoutInflater.from(this).inflate(layout.value, mRootView, false)
-    screen.onViewCreated(newView)
-
-    mRootView.addView(newView, 0)
-    if (oldView != null) {
-      mRootView.removeView(oldView)
-    }
-  }
-
-  private fun updateAppBar(screen: Screen, history: History) {
-    supportActionBar.title = screen.title
-    val isHome = history.size() == 1
+  private fun updateAppBar(title: String, isHome: Boolean) {
+    supportActionBar.title = title
     mToggle.isDrawerIndicatorEnabled = isHome;
     mToggle.toolbarNavigationClickListener = when {
       isHome -> null
       else -> View.OnClickListener {
-        mFlow.setHistory(History.single(SimpleScreen("Main")), Flow.Direction.BACKWARD)
+        mFlow.setHistory(History.single(SimpleScreen("Main")), Flow.Direction.REPLACE)
       }
     }
     mToggle.syncState()
