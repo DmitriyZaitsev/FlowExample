@@ -9,7 +9,7 @@ import android.view.View
  * *
  * @since 2015-Nov-26, 23:45
  */
-class SimpleScreen(override val title: String) : Screen {
+data class SimpleScreen(override val title: String) : Screen {
   override val viewResId = R.layout.screen_view
 
   override fun onViewCreated(view: View) {
