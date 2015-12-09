@@ -1,9 +1,12 @@
 package com.dzaitsev.flowexample
 
-import android.view.View
+/**
+ * ~ ~ ~ ~ Description ~ ~ ~ ~
 
-interface Screen {
-  val title: String
-  val viewResId: Int
-  fun onViewCreated(view: View)
-}
+ * @author Dmitriy Zaitsev
+ * *
+ * @since 2015-Nov-26, 23:45
+ */
+@Layout(R.layout.screen_view)
+data class Screen(val title: String)
+

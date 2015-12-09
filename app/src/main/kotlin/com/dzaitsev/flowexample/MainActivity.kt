@@ -21,7 +21,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
   private val TAG = "MainActivity"
   private val mSceneRoot: ViewAnimator by lazy { findViewById(R.id.rootView) as ViewAnimator }
   private val mDrawer: DrawerLayout by lazy { findViewById(R.id.drawer_layout) as DrawerLayout }
-  private val mFlow: Flow by lazy { Flow(History.single(SimpleScreen("Main"))) }
+  private val mFlow: Flow by lazy { Flow(History.single(Screen("Main"))) }
   private var mToggle: ActionBarDrawerToggle by Delegates.notNull<ActionBarDrawerToggle>()
 
   /**
@@ -35,21 +35,21 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     val destination = traversal.destination
     Log.i(TAG, "Flow.dispatch ${traversal.direction}")
 
-    val destScreen = destination.top<Screen>()
-    val destView = LayoutInflater.from(this).inflate(destScreen.viewResId, mSceneRoot, false)
-    destination.currentViewState()?.restore(destView)
-    destScreen.onViewCreated(destView)
+    val destinationScreen = destination.top<Screen>()
+    val layout = destinationScreen.javaClass.getAnnotation(Layout::class.java)
+    val destinationView = LayoutInflater.from(this).inflate(layout.value, mSceneRoot, false)
+    destination.currentViewState()?.restore(destinationView)
 
     setupTransitionAnimation(traversal.direction)
 
     val originView = mSceneRoot.currentView
-    mSceneRoot.addView(destView)
+    mSceneRoot.addView(destinationView)
     mSceneRoot.showNext()
     if (originView != null) {
       traversal.origin.currentViewState()?.save(originView)
       mSceneRoot.removeView(originView)
     }
-    updateAppBar(destScreen.title, destination.size() == 1)
+    updateAppBar(destinationScreen.title, destination.size() == 1)
     callback.onTraversalCompleted()
   }
 
@@ -89,11 +89,11 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     mDrawer.closeDrawer(GravityCompat.START)
 
     mFlow.set(when (item.itemId) {
-      R.id.nav_import -> SimpleScreen("Import")
-      R.id.nav_gallery -> SimpleScreen("Gallery")
-      R.id.nav_slideshow -> SimpleScreen("Slideshow")
-      R.id.nav_tools -> SimpleScreen("Tools")
-      else -> SimpleScreen("Main")
+      R.id.nav_import -> Screen("Import")
+      R.id.nav_gallery -> Screen("Gallery")
+      R.id.nav_slideshow -> Screen("Slideshow")
+      R.id.nav_tools -> Screen("Tools")
+      else -> Screen("Main")
     })
 
     return true
@@ -105,7 +105,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     mToggle.toolbarNavigationClickListener = when {
       isHome -> null
       else -> View.OnClickListener {
-        mFlow.setHistory(History.single(SimpleScreen("Main")), Flow.Direction.BACKWARD)
+        mFlow.setHistory(History.single(Screen("Main")), Flow.Direction.BACKWARD)
       }
     }
     mToggle.syncState()
