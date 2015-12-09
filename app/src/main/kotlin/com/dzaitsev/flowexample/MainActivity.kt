@@ -11,14 +11,15 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
-import android.view.ViewGroup
+import android.view.animation.AnimationUtils
+import android.widget.ViewAnimator
 import flow.Flow
 import flow.History
 import kotlin.properties.Delegates
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener, Flow.Dispatcher {
   private val TAG = "MainActivity"
-  private val mRootView: ViewGroup by lazy { findViewById(R.id.rootView) as ViewGroup }
+  private val mSceneRoot: ViewAnimator by lazy { findViewById(R.id.rootView) as ViewAnimator }
   private val mDrawer: DrawerLayout by lazy { findViewById(R.id.drawer_layout) as DrawerLayout }
   private val mFlow: Flow by lazy { Flow(History.single(SimpleScreen("Main"))) }
   private var mToggle: ActionBarDrawerToggle by Delegates.notNull<ActionBarDrawerToggle>()
@@ -35,15 +36,18 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     Log.i(TAG, "Flow.dispatch ${traversal.direction}")
 
     val destScreen = destination.top<Screen>()
-    val destView = LayoutInflater.from(this).inflate(destScreen.viewResId, mRootView, false)
+    val destView = LayoutInflater.from(this).inflate(destScreen.viewResId, mSceneRoot, false)
     destination.currentViewState()?.restore(destView)
     destScreen.onViewCreated(destView)
 
-    val originView = mRootView.getChildAt(0)
-    mRootView.addView(destView, 0)
+    setupTransitionAnimation(traversal.direction)
+
+    val originView = mSceneRoot.currentView
+    mSceneRoot.addView(destView)
+    mSceneRoot.showNext()
     if (originView != null) {
       traversal.origin.currentViewState()?.save(originView)
-      mRootView.removeView(originView)
+      mSceneRoot.removeView(originView)
     }
     updateAppBar(destScreen.title, destination.size() == 1)
     callback.onTraversalCompleted()
@@ -101,9 +105,23 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     mToggle.toolbarNavigationClickListener = when {
       isHome -> null
       else -> View.OnClickListener {
-        mFlow.setHistory(History.single(SimpleScreen("Main")), Flow.Direction.REPLACE)
+        mFlow.setHistory(History.single(SimpleScreen("Main")), Flow.Direction.BACKWARD)
       }
     }
     mToggle.syncState()
+  }
+
+  private fun setupTransitionAnimation(direction: Flow.Direction) {
+    // use 'if' instead of 'when' because of https://youtrack.jetbrains.com/issue/KT-10341
+    if (direction == Flow.Direction.FORWARD) {
+      mSceneRoot.inAnimation = AnimationUtils.loadAnimation(this, R.anim.slide_in_right)
+      mSceneRoot.outAnimation = AnimationUtils.loadAnimation(this, R.anim.slide_out_left)
+    } else if (direction == Flow.Direction.BACKWARD) {
+      mSceneRoot.inAnimation = AnimationUtils.loadAnimation(this, R.anim.slide_in_left)
+      mSceneRoot.outAnimation = AnimationUtils.loadAnimation(this, R.anim.slide_out_right)
+    } else {
+      mSceneRoot.inAnimation = null
+      mSceneRoot.outAnimation = null
+    }
   }
 }
