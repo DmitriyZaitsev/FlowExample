@@ -7,7 +7,6 @@ import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
@@ -18,8 +17,7 @@ import flow.History
 import kotlin.properties.Delegates
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener, Flow.Dispatcher {
-  private val TAG = "MainActivity"
-  private val mSceneRoot: ViewAnimator by lazy { findViewById(R.id.rootView) as ViewAnimator }
+  private val mContainerView: ViewAnimator by lazy { findViewById(R.id.rootView) as ViewAnimator }
   private val mDrawer: DrawerLayout by lazy { findViewById(R.id.drawer_layout) as DrawerLayout }
   private val mFlow: Flow by lazy {
     when (lastCustomNonConfigurationInstance) {
@@ -37,23 +35,22 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
    * @param callback Must be called to indicate completion of the traversal.
    */
   override fun dispatch(traversal: Flow.Traversal, callback: Flow.TraversalCallback) {
-    val destination = traversal.destination
-    Log.i(TAG, "Flow.dispatch ${traversal.direction}")
+    val originView = mContainerView.currentView
 
-    val destinationScreen = destination.top<Screen>()
-    val layout = destinationScreen.javaClass.getAnnotation(Layout::class.java)
-    val destinationView = LayoutInflater.from(this).inflate(layout.value, mSceneRoot, false)
-    destination.currentViewState()?.restore(destinationView)
-
-    setupTransitionAnimation(traversal.direction)
-
-    val originView = mSceneRoot.currentView
-    mSceneRoot.addView(destinationView)
-    mSceneRoot.showNext()
     if (originView != null) {
       traversal.origin.currentViewState()?.save(originView)
-      mSceneRoot.removeView(originView)
     }
+
+    val destination = traversal.destination
+    val destinationScreen = destination.top<Screen>()
+    val layout = destinationScreen.javaClass.getAnnotation(Layout::class.java)
+    val destinationView = LayoutInflater.from(this).inflate(layout.value, mContainerView, false)
+    destination.currentViewState()?.restore(destinationView)
+
+    mContainerView.addView(destinationView)
+    changeTransitionAnimation(traversal.direction)
+    mContainerView.showNext()
+    mContainerView.removeView(originView)
     updateAppBar(destinationScreen.title, destination.size() == 1)
     callback.onTraversalCompleted()
   }
@@ -118,17 +115,17 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     mToggle.syncState()
   }
 
-  private fun setupTransitionAnimation(direction: Flow.Direction) {
+  private fun changeTransitionAnimation(direction: Flow.Direction) {
     // use 'if' instead of 'when' because of https://youtrack.jetbrains.com/issue/KT-10341
     if (direction == Flow.Direction.FORWARD) {
-      mSceneRoot.inAnimation = AnimationUtils.loadAnimation(this, R.anim.slide_in_right)
-      mSceneRoot.outAnimation = AnimationUtils.loadAnimation(this, R.anim.slide_out_left)
+      mContainerView.inAnimation = AnimationUtils.loadAnimation(this, R.anim.slide_in_right)
+      mContainerView.outAnimation = AnimationUtils.loadAnimation(this, R.anim.slide_out_left)
     } else if (direction == Flow.Direction.BACKWARD) {
-      mSceneRoot.inAnimation = AnimationUtils.loadAnimation(this, R.anim.slide_in_left)
-      mSceneRoot.outAnimation = AnimationUtils.loadAnimation(this, R.anim.slide_out_right)
+      mContainerView.inAnimation = AnimationUtils.loadAnimation(this, R.anim.slide_in_left)
+      mContainerView.outAnimation = AnimationUtils.loadAnimation(this, R.anim.slide_out_right)
     } else {
-      mSceneRoot.inAnimation = null
-      mSceneRoot.outAnimation = null
+      mContainerView.inAnimation = null
+      mContainerView.outAnimation = null
     }
   }
 }
