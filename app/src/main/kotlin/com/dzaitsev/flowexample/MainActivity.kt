@@ -37,7 +37,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
   override fun dispatch(traversal: Flow.Traversal, callback: Flow.TraversalCallback) {
     val originView = mContainerView.currentView
 
-    if (originView != null) {
+    originView?.let {
       traversal.origin.currentViewState()?.save(originView)
     }
 
@@ -116,16 +116,19 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
   }
 
   private fun changeTransitionAnimation(direction: Flow.Direction) {
-    // use 'if' instead of 'when' because of https://youtrack.jetbrains.com/issue/KT-10341
-    if (direction == Flow.Direction.FORWARD) {
-      mContainerView.inAnimation = AnimationUtils.loadAnimation(this, R.anim.slide_in_right)
-      mContainerView.outAnimation = AnimationUtils.loadAnimation(this, R.anim.slide_out_left)
-    } else if (direction == Flow.Direction.BACKWARD) {
-      mContainerView.inAnimation = AnimationUtils.loadAnimation(this, R.anim.slide_in_left)
-      mContainerView.outAnimation = AnimationUtils.loadAnimation(this, R.anim.slide_out_right)
-    } else {
-      mContainerView.inAnimation = null
-      mContainerView.outAnimation = null
+    when (direction) {
+      Flow.Direction.FORWARD -> {
+        mContainerView.inAnimation = AnimationUtils.loadAnimation(this, R.anim.slide_in_right)
+        mContainerView.outAnimation = AnimationUtils.loadAnimation(this, R.anim.slide_out_left)
+      }
+      Flow.Direction.BACKWARD -> {
+        mContainerView.inAnimation = AnimationUtils.loadAnimation(this, R.anim.slide_in_left)
+        mContainerView.outAnimation = AnimationUtils.loadAnimation(this, R.anim.slide_out_right)
+      }
+      else -> {
+        mContainerView.inAnimation = null
+        mContainerView.outAnimation = null
+      }
     }
   }
 }
