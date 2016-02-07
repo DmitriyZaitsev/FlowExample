@@ -61,8 +61,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     val toolbar = findViewById(R.id.toolbar) as Toolbar
     setSupportActionBar(toolbar)
-    supportActionBar.setHomeButtonEnabled(true)
-    supportActionBar.setDisplayHomeAsUpEnabled(true)
+    supportActionBar?.setHomeButtonEnabled(true)
+    supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
     mToggle = ActionBarDrawerToggle(this, mDrawer, toolbar, 0, 0)
     mDrawer.setDrawerListener(mToggle)
@@ -104,7 +104,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
   override fun onRetainCustomNonConfigurationInstance() = mFlow
 
   private fun updateAppBar(title: String, isHome: Boolean) {
-    supportActionBar.title = title
+    supportActionBar?.title = title
     mToggle.isDrawerIndicatorEnabled = isHome;
     mToggle.toolbarNavigationClickListener = when {
       isHome -> null
