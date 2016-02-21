@@ -16,7 +16,6 @@ import android.widget.ViewAnimator
 import flow.Direction
 import flow.Dispatcher
 import flow.Flow
-import flow.History
 import flow.Traversal
 import flow.TraversalCallback
 import kotlin.properties.Delegates
@@ -119,7 +118,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
       toolbarNavigationClickListener = when {
         isHome -> null
         else -> View.OnClickListener {
-          Flow.get(this@MainActivity).setHistory(History.single(Screen("Main")), Direction.BACKWARD)
+          Flow.get(this@MainActivity).replaceHistory(Screen("Main"), Direction.BACKWARD)
         }
       }
       syncState()
