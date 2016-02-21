@@ -1,3 +1,3 @@
 #Flow sample
 
-###Simple implementation of using [Flow v0.12] (https://github.com/square/flow) by Square
+###Simple implementation of using [Flow v1.0.0-alpha] (https://github.com/square/flow) by Square
