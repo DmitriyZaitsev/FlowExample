@@ -32,6 +32,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     val flowContext = Flow.configure(newBase, this)
         .dispatcher(this)
         .defaultKey(Screen("Main"))
+        .keyParceler(ScreenParceler())
         .install()
     super.attachBaseContext(flowContext)
   }

@@ -1,5 +1,7 @@
 package com.dzaitsev.flowexample
 
+import org.parceler.Parcel
+
 /**
  * ~ ~ ~ ~ Description ~ ~ ~ ~
 
@@ -7,6 +9,9 @@ package com.dzaitsev.flowexample
  * *
  * @since 2015-Nov-26, 23:45
  */
+@Parcel
 @Layout(R.layout.screen_view)
-data class Screen(val title: String)
+data class Screen(val title: String) {
+  constructor() : this("")
+}
 
