@@ -8,20 +8,16 @@ import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
-import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
-import android.view.animation.AnimationUtils
 import android.widget.ViewAnimator
 import flow.Direction
-import flow.Dispatcher
 import flow.Flow
-import flow.Traversal
-import flow.TraversalCallback
+import flow.KeyDispatcher
 import kotlin.properties.Delegates
 
-class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener, Dispatcher {
-  private val mContainerView: ViewAnimator by lazy { findViewById(R.id.rootView) as ViewAnimator }
+class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
+  internal val containerView: ViewAnimator by lazy { findViewById(R.id.rootView) as ViewAnimator }
   private val mDrawer: DrawerLayout by lazy { findViewById(R.id.drawer_layout) as DrawerLayout }
   private var mToggle: ActionBarDrawerToggle by Delegates.notNull<ActionBarDrawerToggle>()
 
@@ -30,42 +26,11 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
    */
   override fun attachBaseContext(newBase: Context?) {
     val flowContext = Flow.configure(newBase, this)
-        .dispatcher(this)
+        .dispatcher(KeyDispatcher.configure(this, ScreenKeyChanger(this)).build())
         .defaultKey(Screen("Main"))
         .keyParceler(ScreenParceler())
         .install()
     super.attachBaseContext(flowContext)
-  }
-
-  /**
-   * Called when the history is about to change.  Note that Flow does not consider the
-   * Traversal to be finished, and will not actually update the history, until the callback is
-   * triggered. Traversals cannot be canceled.
-   *
-   * @param callback Must be called to indicate completion of the traversal.
-   */
-  override fun dispatch(traversal: Traversal, callback: TraversalCallback) {
-    val originView = mContainerView.currentView
-    originView?.let {
-      val originScreen = traversal.origin?.top<Screen>()
-      traversal.getState(originScreen).save(originView)
-    }
-
-    val destination = traversal.destination
-    val destinationScreen = destination.top<Screen>()
-    val layout = destinationScreen.javaClass.getAnnotation(Layout::class.java)
-    val flowContext = traversal.createContext(destinationScreen, this)
-    val destinationView = LayoutInflater.from(flowContext).inflate(layout.value, mContainerView, false)
-    traversal.getState(destinationScreen).restore(destinationView)
-
-    with(mContainerView) {
-      addView(destinationView)
-      changeTransitionAnimation(traversal.direction)
-      showNext()
-      removeView(originView)
-    }
-    updateAppBar(destinationScreen.title, destination.size() == 1)
-    callback.onTraversalCompleted()
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -112,7 +77,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     return true
   }
 
-  private fun updateAppBar(title: String, isHome: Boolean) {
+  fun updateAppBar(title: String, isHome: Boolean) {
     supportActionBar?.title = title
     with(mToggle) {
       isDrawerIndicatorEnabled = isHome;
@@ -123,23 +88,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
       }
       syncState()
-    }
-  }
-
-  private fun ViewAnimator.changeTransitionAnimation(direction: Direction) {
-    when (direction) {
-      Direction.FORWARD -> {
-        inAnimation = AnimationUtils.loadAnimation(context, R.anim.slide_in_right)
-        outAnimation = AnimationUtils.loadAnimation(context, R.anim.slide_out_left)
-      }
-      Direction.BACKWARD -> {
-        inAnimation = AnimationUtils.loadAnimation(context, R.anim.slide_in_left)
-        outAnimation = AnimationUtils.loadAnimation(context, R.anim.slide_out_right)
-      }
-      else -> {
-        inAnimation = null
-        outAnimation = null
-      }
     }
   }
 }
